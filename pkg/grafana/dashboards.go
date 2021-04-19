@@ -273,14 +273,14 @@ func findOrCreateFolder(folderName string) (int64, error) {
 	}
 }
 
-func createFolder(UID string, Title string) (int64, error) {
+func createFolder(UID string, title string) (int64, error) {
 	grafanaURL, err := getGrafanaURL("api/folders")
 	if err != nil {
 		return 0, err
 	}
 	folder := Folder{
 		UID:   UID,
-		Title: UID,
+		Title: title,
 	}
 
 	folderJSON, err := folder.toJSON()
