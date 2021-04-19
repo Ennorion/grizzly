@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/grafana/grizzly/pkg/grizzly"
 )
@@ -56,8 +57,8 @@ func postDashboard(board Dashboard) error {
 		return err
 	}
 
-	folderUID := board.folderUID()
-	folderID, err := findOrCreateFolder(folderUID)
+	folderName := board.folderName()
+	folderID, err := findOrCreateFolder(folderName)
 	if err != nil {
 		return err
 	}
@@ -173,10 +174,10 @@ func (d *Dashboard) toJSON() (string, error) {
 }
 
 // folderUID retrieves the folder UID for a dashboard
-func (d *Dashboard) folderUID() string {
-	folderUID, ok := (*d)["folderName"]
+func (d *Dashboard) folderName() string {
+	folderName, ok := (*d)["folderName"]
 	if ok {
-		return folderUID.(string)
+		return folderName.(string)
 	}
 	return ""
 }
@@ -234,10 +235,16 @@ func (f *Folder) toJSON() (string, error) {
 	return string(j), nil
 }
 
-func findOrCreateFolder(UID string) (int64, error) {
-	if UID == "0" || UID == "" || UID == dashboardFolderDefault {
+func makeUID(folderName string) string {
+	UID := strings.ReplaceAll(folderName, " ", "-")
+	return UID
+}
+
+func findOrCreateFolder(folderName string) (int64, error) {
+	if folderName == "0" || folderName == "" || folderName == dashboardFolderDefault {
 		return 0, nil
 	}
+	UID := makeUID(folderName)
 	grafanaURL, err := getGrafanaURL("api/folders/" + UID)
 	if err != nil {
 		return 0, err
@@ -259,14 +266,14 @@ func findOrCreateFolder(UID string) (int64, error) {
 		return folder.ID, nil
 
 	} else if resp.StatusCode == 404 {
-		return createFolder(UID)
+		return createFolder(UID, folderName)
 
 	} else {
 		return 0, fmt.Errorf("Getting folder %s returned error %d", UID, resp.StatusCode)
 	}
 }
 
-func createFolder(UID string) (int64, error) {
+func createFolder(UID string, Title string) (int64, error) {
 	grafanaURL, err := getGrafanaURL("api/folders")
 	if err != nil {
 		return 0, err
