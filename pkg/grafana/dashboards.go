@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
+	"regexp"
 
 	"github.com/grafana/grizzly/pkg/grizzly"
 )
@@ -236,7 +236,8 @@ func (f *Folder) toJSON() (string, error) {
 }
 
 func makeUID(folderName string) string {
-	UID := strings.ReplaceAll(folderName, " ", "-")
+	re := regexp.MustCompile(`[/|, .()\[\]\\]`)
+	UID := re.ReplaceAllString(folderName, "-")
 	return UID
 }
 
