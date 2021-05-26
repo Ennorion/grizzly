@@ -291,12 +291,13 @@ func createFolder(UID string, title string) (int64, error) {
 	resp, err := http.Post(grafanaURL, "application/json", bytes.NewBufferString(folderJSON))
 	if err != nil {
 		return 0, err
-	} else if resp.StatusCode >= 400 {
-		return 0, fmt.Errorf("Non-200 response from Grafana while applying folder %s: %s", UID, resp.Status)
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err := json.Unmarshal([]byte(string(body)), &folder); err != nil {
 		return 0, err
+	}
+	if resp.StatusCode >= 400 {
+		return 0, fmt.Errorf("Non-200 response from Grafana while applying folder %s: %s: %s", UID, resp.Status, string(body))
 	}
 
 	return folder.ID, nil
